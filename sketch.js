@@ -1,94 +1,95 @@
-const Engine = Matter.Engine;
-const Render = Matter.Render;
-const World = Matter.World;
-const Bodies = Matter.Bodies;
-const Constraint = Matter.Constraint;
-const Body = Matter.Body;
-const Composites = Matter.Composites;
-const Composite = Matter.Composite;
+const Engine = Matter.Engine; //mecanismo de física
+const Render = Matter.Render; //renderização
+const World = Matter.World; //mundo
+const Bodies = Matter.Bodies; //corpos
+const Constraint = Matter.Constraint; //restrição/ união
+const Body = Matter.Body; //corpo
+const Composites = Matter.Composites; //grupos
+const Composite = Matter.Composite; //grupo
 
-let engine;
+let engine; //escopo de bloco
 let world;
-var ground;
-var rope;
-var fruit, fruitImg;
-var bgImg, bunnyImg;
+var corda;
+var fruta;
+var solo;
 var link;
-var bunny;
-var button;
-var blinkImg, eatImg, sadImg;
+var coelho;
+var imgcoelho, imgfruta, imgfundo;
+var botao;
+var coelhoComendo, coelhoTriste, coelhoPiscando;
 
 function preload()
 {
-  fruitImg = loadImage("assets/melon.png");
-  bgImg = loadImage("assets/background.png");
-  bunnyImg = loadImage("assets/Rabbit-01.png");
-  blinkImg = loadAnimation("assets/blink_1.png", "assets/blink_2.png", "assets/blink_3.png");
-  eatImg = loadAnimation("assets/eat_0.png", "assets/eat_1.png", "assets/eat_2.png", "assets/eat_3.png", "assets/eat_4.png");
-  sadImg = loadAnimation("assets/sad_1.png", "assets/sad_2.png", "assets/sad_3.png");
+ imgcoelho = loadImage("assets/blink_1.png");
+ imgfruta = loadImage("assets/melon.png");
+ imgfundo = loadImage("assets/background.png");
+ coelhoComendo = loadAnimation("assets/eat_0.png", "assets/eat_1.png", "assets/eat_2.png", "assets/eat_3.png", "assets/eat_4.png");
+ coelhoTriste = loadAnimation("assets/sad_1.png", "assets/sad_2.png", "assets/sad_3.png");
+ coelhoPiscando = loadAnimation("assets/blink_1.png", "assets/blink_2.png", "assets/blink_3.png");
 
-  blinkImg.playing = true;
-  blinkImg.looping = true;
-  //eat e sad
+ coelhoComendo.looping = false;
+ coelhoPiscando.looping = true;
+
+ coelhoComendo.playing  = false;
+ coelhoPiscando.playing = true;
 }
+
 
 function setup() 
 {
   createCanvas(500,700);
-  frameRate(80);
+ 
   engine = Engine.create();
   world = engine.world;
-  ground = new Ground(200,680,600,20);
-  rope = new Rope(5,{x: 50,y:50});
-  fruit = Bodies.circle(100,100,25);
-  World.add(world,fruit);
-  link = new Link(rope,fruit);
 
-  blinkImg.frameDelay = 20;
-  //eat e sad
-  
-  bunny = createSprite(60,620);
-  bunny.addImage(bunnyImg);
-  bunny.scale = 0.22;
+  corda = new Rope(6,{x:250,y:30});
 
-  bunny.addAnimation('piscando',blinkImg);
-  bunny.addAnimation('comendo',eatImg);
-  //sad
-  bunny.changeAnimation('piscando');
+  solo = new Ground(width/2, height-10, width, 10);
 
-  button = createImg("assets/cut_btn.png");
-  button.position(25,40);
-  button.size(60,60);
-  button.mouseClicked(cortar);
-  
+  fruta = Bodies.circle(300,300,60);
+  Composite.add(corda.body,fruta);
 
-  imageMode(CENTER);
+  link = new Link(corda,fruta);
+
+  coelhoPiscando.frameDelay = 10;
+
+  coelho = createSprite(width/2, height - 100);
+  //coelho.addImage(imgcoelho);
+  coelho.addAnimation("piscando", coelhoPiscando);
+  coelho.addAnimation("comendo", coelhoComendo);
+
+  coelho.scale = 0.3
+
   rectMode(CENTER);
-  ellipseMode(RADIUS);
+  imageMode(CENTER);
   textSize(50)
+  //imageMode(CENTER);
   
+  botao = createImg("assets/cut_button.png");
+  botao.position(250,30);
+  botao.size(30,30);
+  botao.mouseClicked(cortar)
+}
+
+function cortar(){
+  corda.break();
+  link.detach();
+  link = null;
 }
 
 function draw() 
 {
-  background(51);
-
-  image(bgImg,width/2,height/2,500,700);
-
-
-  //ground.show();
-  rope.show();
-  
-  
-  image(fruitImg,fruit.position.x, fruit.position.y,50,50);
-  Engine.update(engine);
-  
+  background(imgfundo);
 
  
-  drawSprites();
+
+ image(imgfruta, fruta.position.x, fruta.position.y,60,60);
+
+  solo.show();
+
+  corda.show();
+
+  Engine.update(engine);
+  
+   drawSprites();
 }
- function cortar(){
-   rope.break();
-   link.soltar();
-   link = null;
-  }
