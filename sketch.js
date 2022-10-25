@@ -1,64 +1,94 @@
-const Engine = Matter.Engine; //mecanismo de física
-const Render = Matter.Render; //renderização
-const World = Matter.World; //mundo
-const Bodies = Matter.Bodies; //corpos
-const Constraint = Matter.Constraint; //restrição/ união
-const Body = Matter.Body; //corpo
-const Composites = Matter.Composites; //grupos
-const Composite = Matter.Composite; //grupo
+const Engine = Matter.Engine;
+const Render = Matter.Render;
+const World = Matter.World;
+const Bodies = Matter.Bodies;
+const Constraint = Matter.Constraint;
+const Body = Matter.Body;
+const Composites = Matter.Composites;
+const Composite = Matter.Composite;
 
-let engine; //escopo de bloco
+let engine;
 let world;
-var corda;
-var fruta;
-var solo;
+var ground;
+var rope;
+var fruit, fruitImg;
+var bgImg, bunnyImg;
 var link;
-var coelho;
+var bunny;
+var button;
+var blinkImg, eatImg, sadImg;
 
 function preload()
 {
-  
+  fruitImg = loadImage("assets/melon.png");
+  bgImg = loadImage("assets/background.png");
+  bunnyImg = loadImage("assets/Rabbit-01.png");
+  blinkImg = loadAnimation("assets/blink_1.png", "assets/blink_2.png", "assets/blink_3.png");
+  eatImg = loadAnimation("assets/eat_0.png", "assets/eat_1.png", "assets/eat_2.png", "assets/eat_3.png", "assets/eat_4.png");
+  sadImg = loadAnimation("assets/sad_1.png", "assets/sad_2.png", "assets/sad_3.png");
 
+  blinkImg.playing = true;
+  blinkImg.looping = true;
+  //eat e sad
 }
-
 
 function setup() 
 {
   createCanvas(500,700);
- 
+  frameRate(80);
   engine = Engine.create();
   world = engine.world;
+  ground = new Ground(200,680,600,20);
+  rope = new Rope(5,{x: 50,y:50});
+  fruit = Bodies.circle(100,100,25);
+  World.add(world,fruit);
+  link = new Link(rope,fruit);
 
-  corda = new Rope(6,{x:250,y:30});
+  blinkImg.frameDelay = 20;
+  //eat e sad
+  
+  bunny = createSprite(60,620);
+  bunny.addImage(bunnyImg);
+  bunny.scale = 0.22;
 
-  solo = new Ground(width/2, height-10, width, 10);
+  bunny.addAnimation('piscando',blinkImg);
+  bunny.addAnimation('comendo',eatImg);
+  //sad
+  bunny.changeAnimation('piscando');
 
-  fruta = Bodies.circle(300,300,20);
-  Composite.add(corda.body,fruta);
+  button = createImg("assets/cut_btn.png");
+  button.position(25,40);
+  button.size(60,60);
+  button.mouseClicked(cortar);
+  
 
-  link = new Link(corda,fruta);
-
-  coelho = createSprite(width/2, height - 100);
-
+  imageMode(CENTER);
   rectMode(CENTER);
   ellipseMode(RADIUS);
   textSize(50)
-  imageMode(CENTER);
   
-
 }
 
 function draw() 
 {
   background(51);
 
-  Engine.update(engine);
+  image(bgImg,width/2,height/2,500,700);
 
-  ellipse(fruta.position.x, fruta.position.y,20);
 
-  solo.show();
-
-  corda.show();
+  //ground.show();
+  rope.show();
   
-   drawSprites();
+  
+  image(fruitImg,fruit.position.x, fruit.position.y,50,50);
+  Engine.update(engine);
+  
+
+ 
+  drawSprites();
 }
+ function cortar(){
+   rope.break();
+   link.soltar();
+   link = null;
+  }
