@@ -15,8 +15,9 @@ var solo;
 var link;
 var coelho;
 var imgcoelho, imgfruta, imgfundo;
-var botao;
+var botao, botaoMudo;
 var coelhoComendo, coelhoTriste, coelhoPiscando;
+var somFundo, somComendo, somCorda, somTriste, somAr;
 
 function preload()
 {
@@ -27,17 +28,28 @@ function preload()
  coelhoTriste = loadAnimation("assets/sad_1.png", "assets/sad_2.png", "assets/sad_3.png");
  coelhoPiscando = loadAnimation("assets/blink_1.png", "assets/blink_2.png", "assets/blink_3.png");
 
+ somFundo = loadSound("assets/sound1.mp3");
+ somComendo = loadSound("assets/eating_sound.mp3");
+ somCorda = loadSound("assets/rope_cut.mp3");
+ somTriste = loadSound("assets/sad.wav");
+ somAr = loadSound("assets/air.wav");
+
  coelhoComendo.looping = false;
  coelhoPiscando.looping = true;
+ coelhoTriste.looping = false;
 
- coelhoComendo.playing  = false;
+ coelhoComendo.playing  = true;
  coelhoPiscando.playing = true;
+ coelhoTriste.playing = false;
 }
 
 
 function setup() 
 {
   createCanvas(500,700);
+
+  somFundo.play();
+  somFundo.setVolume(0);
  
   engine = Engine.create();
   world = engine.world;
@@ -46,29 +58,38 @@ function setup()
 
   solo = new Ground(width/2, height-10, width, 10);
 
-  fruta = Bodies.circle(300,300,60);
-  Composite.add(corda.body,fruta);
-
-  link = new Link(corda,fruta);
-
   coelhoPiscando.frameDelay = 10;
+  coelhoTriste.frameDelay = 10;
+  coelhoComendo.frameDelay = 7;
 
   coelho = createSprite(width/2, height - 100);
   //coelho.addImage(imgcoelho);
+  
   coelho.addAnimation("piscando", coelhoPiscando);
   coelho.addAnimation("comendo", coelhoComendo);
+  coelho.addAnimation("triste", coelhoTriste);
 
-  coelho.scale = 0.3
+  coelho.scale = 0.3;
+
+  fruta = Bodies.circle(300,300,20);
+  Matter.Composite.add(corda.body,fruta);
+
+  link = new Link(corda,fruta);
 
   rectMode(CENTER);
-  imageMode(CENTER);
+  ellipseMode(RADIUS);
   textSize(50)
   //imageMode(CENTER);
   
   botao = createImg("assets/cut_button.png");
   botao.position(250,30);
   botao.size(30,30);
-  botao.mouseClicked(cortar)
+  botao.mouseClicked(cortar);
+
+  botaoMudo = createImg("assets/mute.png");
+  botaoMudo.position(430,30);
+  botaoMudo.size(50,50);
+  botaoMudo.mouseClicked(mutar);
 }
 
 function cortar(){
@@ -77,19 +98,49 @@ function cortar(){
   link = null;
 }
 
+function mutar(){
+  if(somFundo.isPlaying()){
+    somFundo.stop();
+  }else{
+    somFundo.play();
+  }
+}
+
 function draw() 
 {
   background(imgfundo);
 
- 
+  //ellipse(fruta.position.x, fruta.position.y,60);
 
- image(imgfruta, fruta.position.x, fruta.position.y,60,60);
+  corda.show();
+ 
+  if(fruta != null){
+    image(imgfruta, fruta.position.x-25, fruta.position.y-50,60,60);
+  }
 
   solo.show();
 
-  corda.show();
+  
 
   Engine.update(engine);
   
+  if (colisao(fruta,coelho) == true){
+    coelho.changeAnimation("comendo")
+  }
+
    drawSprites();
+}
+
+function colisao (body, sprite){
+  if (body != null){
+    var distancia = dist(body.position.x, body.position.y, sprite.position.x, sprite.position.y);
+    if (distancia <= 80){
+      World.remove(engine.world, fruta);
+      fruta = null;
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
 }
