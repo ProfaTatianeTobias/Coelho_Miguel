@@ -15,9 +15,10 @@ var solo;
 var link;
 var coelho;
 var imgcoelho, imgfruta, imgfundo;
-var botao, botaoMudo;
+var botao, botaoMudo, balao;
 var coelhoComendo, coelhoTriste, coelhoPiscando;
 var somFundo, somComendo, somCorda, somTriste, somAr;
+var canW, canH;
 
 function preload()
 {
@@ -40,29 +41,38 @@ function preload()
 
  coelhoComendo.playing  = true;
  coelhoPiscando.playing = true;
- coelhoTriste.playing = false;
+ coelhoTriste.playing = true;
 }
 
 
 function setup() 
 {
-  createCanvas(500,700);
-
+  var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if(isMobile){
+    canW = displayWidth;
+    canH = displayHeight;
+    createCanvas(canW+80, canH);
+  }else{
+    canW = windowWidth;
+    canH = windowHeight;
+    createCanvas(canW, canH);
+  }
+  
   somFundo.play();
-  somFundo.setVolume(0);
+  somFundo.setVolume(0.3);
  
   engine = Engine.create();
   world = engine.world;
 
   corda = new Rope(6,{x:250,y:30});
 
-  solo = new Ground(width/2, height-10, width, 10);
+  solo = new Ground(width/2, canH-50, width, 10);
 
   coelhoPiscando.frameDelay = 10;
   coelhoTriste.frameDelay = 10;
   coelhoComendo.frameDelay = 7;
 
-  coelho = createSprite(width/2, height - 100);
+  coelho = createSprite(200, canH - 150);
   //coelho.addImage(imgcoelho);
   
   coelho.addAnimation("piscando", coelhoPiscando);
@@ -90,12 +100,18 @@ function setup()
   botaoMudo.position(430,30);
   botaoMudo.size(50,50);
   botaoMudo.mouseClicked(mutar);
+
+  balao = createImg("assets/balloon.png");
+  balao.position(50,200);
+  balao.size(100,100);
+  balao.mouseClicked(soprar);
 }
 
 function cortar(){
   corda.break();
   link.detach();
   link = null;
+  somCorda.play();
 }
 
 function mutar(){
@@ -104,6 +120,11 @@ function mutar(){
   }else{
     somFundo.play();
   }
+}
+
+function soprar(){
+  Body.applyForce(fruta,{x:0,y:0},{x:0.01,y:0});
+  somAr.play();
 }
 
 function draw() 
@@ -118,17 +139,22 @@ function draw()
     image(imgfruta, fruta.position.x-25, fruta.position.y-50,60,60);
   }
 
-  solo.show();
-
-  
+  //solo.show();
 
   Engine.update(engine);
   
   if (colisao(fruta,coelho) == true){
-    coelho.changeAnimation("comendo")
+    coelho.changeAnimation("comendo");
+    somComendo.play();
   }
 
-   drawSprites();
+  if (fruta != null && fruta.position.y>=650){
+    coelho.changeAnimation("triste");
+    somTriste.play();
+    fruta = null;
+  }
+
+  drawSprites();
 }
 
 function colisao (body, sprite){
